@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# ------------------------ CONFIGURACIÓN CORS Y STATIC -----------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,7 +24,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuración para archivos estáticos y plantillas HTML
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -133,7 +133,6 @@ async def register_clinical_procedure(request: Request):
         raise HTTPException(status_code=500, detail="Error al registrar procedimiento y medicamentos")
 
 # ------------------ NUEVOS ENDPOINTS PARA FORMULARIO HTML -------------------
-
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse("formulario.html", {"request": request})
@@ -141,18 +140,15 @@ async def index(request: Request):
 @app.post("/submit-form", response_model=dict)
 async def submit_form(data: MedicalForm):
     try:
-        # Puedes enviar esto a `write_clinical_procedure` o alguna lógica extra
         status, procedure_id = write_clinical_procedure(data.dict())
         if status == "success":
             return {"message": "Formulario recibido correctamente", "_id": procedure_id}
         else:
             raise HTTPException(status_code=500, detail="Error al guardar formulario")
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ---------------------------------------------------------------------------
-
+# ----------------------------- EJECUCIÓN LOCAL -------------------------------
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
