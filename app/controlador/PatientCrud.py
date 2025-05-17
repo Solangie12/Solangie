@@ -130,6 +130,7 @@ def read_appointment(appointment_id: str) -> dict:
 def write_clinical_procedure(procedure_data: dict):
     try:
         result = clinical_procedure_collection.insert_one(procedure_data)
+        print(f"Inserted clinical procedure ID: {result.inserted_id}")
         return "success", str(result.inserted_id)
     except Exception as e:
         print("Error in write_clinical_procedure:", e)
