@@ -129,6 +129,8 @@ def read_appointment(appointment_id: str) -> dict:
 
 def write_clinical_procedure(procedure_data: dict):
     try:
+        print("Recibido procedimiento clínico:", procedure_data)  # Agrega esto
+
         result = clinical_procedure_collection.insert_one(procedure_data)
         print(f"Inserted clinical procedure ID: {result.inserted_id}")
         return "success", str(result.inserted_id)
