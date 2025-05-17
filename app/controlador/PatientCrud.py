@@ -7,7 +7,13 @@ import json
 collection = connect_to_mongodb("SamplePatientService", "patients")
 # Conexión a la base de datos para la colección de solicitudes de servicio
 service_requests_collection = connect_to_mongodb("SamplePatientService", "service_requests")
+# Conexión a la base de datos para la colección de citas
 appointment_collection = connect_to_mongodb("SamplePatientService", "appointment")
+# Conexión a la base de datos para la colección de procedimientos clínicos
+clinical_procedure_collection = connect_to_mongodb("SamplePatientService", "clinical_procedure")
+# Conexión a la base de datos para la colección de medicamentos
+medication_collection = connect_to_mongodb("SamplePatientService", "medication")
+
 
 def GetPatientById(patient_id: str):
     try:
@@ -20,13 +26,13 @@ def GetPatientById(patient_id: str):
         print("Error in GetPatientById:", e)
         return "notFound", None
 
+
 def WritePatient(patient_dict: dict):
     try:
         pat = Patient.model_validate(patient_dict)
     except Exception as e:
         print("Error validating patient:", e)
         return f"errorValidating: {str(e)}", None
-    # Es recomendable insertar el objeto validado en lugar del dict original
     validated_patient_json = pat.model_dump()
     result = collection.insert_one(validated_patient_json)
     if result:
@@ -34,6 +40,7 @@ def WritePatient(patient_dict: dict):
         return "success", inserted_id
     else:
         return "errorInserting", None
+
 
 def GetPatientByIdentifier(patientSystem, patientValue):
     try:
@@ -53,19 +60,17 @@ def GetPatientByIdentifier(patientSystem, patientValue):
         print("Error in GetPatientByIdentifier:", e)
         return "notFound", None
 
+
 def WriteServiceRequest(service_request_data: dict):
     try:
-        # Inserta la solicitud en la colección configurada para solicitudes de servicio
         result = service_requests_collection.insert_one(service_request_data)
         return "success", str(result.inserted_id)
     except Exception as e:
         print("Error in WriteServiceRequest:", e)
         return "error", None
 
+
 def read_service_request(service_request_id: str) -> dict:
-    """
-    Recupera una solicitud de servicio a partir de su ID.
-    """
     try:
         query = {"_id": ObjectId(service_request_id)}
     except Exception as e:
@@ -82,7 +87,7 @@ def read_service_request(service_request_id: str) -> dict:
 
 def GetAppointmentByIdentifier(appointmentSystem, appointmentValue):
     try:
-        appointment = appointments_collection.find_one({
+        appointment = appointment_collection.find_one({
             "identifier": {
                 "$elemMatch": {
                     "system": appointmentSystem,
@@ -98,10 +103,8 @@ def GetAppointmentByIdentifier(appointmentSystem, appointmentValue):
         print("Error en GetAppointmentByIdentifier:", e)
         return "notFound", None
 
+
 def write_appointment(appointment_data: dict):
-    """
-    Inserta un appointment en la colección de appointments.
-    """
     try:
         result = appointment_collection.insert_one(appointment_data)
         return "success", str(result.inserted_id)
@@ -109,10 +112,8 @@ def write_appointment(appointment_data: dict):
         print("Error in write_appointment:", e)
         return "error", None
 
+
 def read_appointment(appointment_id: str) -> dict:
-    """
-    Recupera un appointment a partir de su ID.
-    """
     try:
         query = {"_id": ObjectId(appointment_id)}
     except Exception as e:
@@ -126,3 +127,53 @@ def read_appointment(appointment_id: str) -> dict:
     else:
         return None
 
+
+# --- NUEVAS FUNCIONES PARA PROCEDIMIENTOS Y MEDICAMENTOS ---
+
+
+def get_clinical_procedures_by_patient(patient_id: str):
+    try:
+        query = {"subject.reference": f"Patient/{patient_id}"}
+        results = list(clinical_procedure_collection.find(query))
+        for procedure in results:
+            procedure["_id"] = str(procedure["_id"])
+        return results
+    except Exception as e:
+        print("Error in get_clinical_procedures_by_patient:", e)
+        return []
+
+
+def get_clinical_procedures_by_service_request(service_request_id: str):
+    try:
+        query = {"basedOn.reference": f"ServiceRequest/{service_request_id}"}
+        results = list(clinical_procedure_collection.find(query))
+        for procedure in results:
+            procedure["_id"] = str(procedure["_id"])
+        return results
+    except Exception as e:
+        print("Error in get_clinical_procedures_by_service_request:", e)
+        return []
+
+
+def get_medications_by_patient(patient_id: str):
+    try:
+        query = {"subject.reference": f"Patient/{patient_id}"}
+        results = list(medication_collection.find(query))
+        for medication in results:
+            medication["_id"] = str(medication["_id"])
+        return results
+    except Exception as e:
+        print("Error in get_medications_by_patient:", e)
+        return []
+
+
+def get_medications_by_service_request(service_request_id: str):
+    try:
+        query = {"basedOn.reference": f"ServiceRequest/{service_request_id}"}
+        results = list(medication_collection.find(query))
+        for medication in results:
+            medication["_id"] = str(medication["_id"])
+        return results
+    except Exception as e:
+        print("Error in get_medications_by_service_request:", e)
+        return []
