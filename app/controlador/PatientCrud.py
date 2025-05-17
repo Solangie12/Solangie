@@ -3,15 +3,11 @@ from bson import ObjectId
 from fhir.resources.patient import Patient
 import json
 
-# Conexión a la base de datos para la colección de pacientes
+# Conexión a la base de datos
 collection = connect_to_mongodb("SamplePatientService", "patients")
-# Conexión a la base de datos para la colección de solicitudes de servicio
 service_requests_collection = connect_to_mongodb("SamplePatientService", "service_requests")
-# Conexión a la base de datos para la colección de citas
 appointment_collection = connect_to_mongodb("SamplePatientService", "appointment")
-# Conexión a la base de datos para la colección de procedimientos clínicos
 clinical_procedure_collection = connect_to_mongodb("SamplePatientService", "clinical_procedure")
-# Conexión a la base de datos para la colección de medicamentos
 medication_collection = connect_to_mongodb("SamplePatientService", "medication")
 
 
@@ -129,6 +125,24 @@ def read_appointment(appointment_id: str) -> dict:
 
 
 # --- NUEVAS FUNCIONES PARA PROCEDIMIENTOS Y MEDICAMENTOS ---
+
+
+def write_clinical_procedure(procedure_data: dict):
+    try:
+        result = clinical_procedure_collection.insert_one(procedure_data)
+        return "success", str(result.inserted_id)
+    except Exception as e:
+        print("Error in write_clinical_procedure:", e)
+        return "error", None
+
+
+def write_medication(medication_data: dict):
+    try:
+        result = medication_collection.insert_one(medication_data)
+        return "success", str(result.inserted_id)
+    except Exception as e:
+        print("Error in write_medication:", e)
+        return "error", None
 
 
 def get_clinical_procedures_by_patient(patient_id: str):
