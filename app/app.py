@@ -1,4 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from typing import List, Optional
+
 from app.controlador.PatientCrud import (
     GetPatientById, WritePatient, GetPatientByIdentifier,
     WriteServiceRequest, read_service_request, write_appointment,
@@ -15,6 +22,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configuración para archivos estáticos y plantillas HTML
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# ---------------------- MODELOS PARA FORMULARIO MÉDICO ----------------------
+class Medication(BaseModel):
+    name: str
+    dose: str
+    frequency: str
+    route: str
+
+class MedicalForm(BaseModel):
+    doctorName: str
+    specialty: str
+    institution: str
+    patientName: str
+    documentType: str
+    documentNumber: str
+    age: int
+    sex: str
+    mainDiagnosis: str
+    procedureDone: str
+    procedureName: str
+    procedureCode: Optional[str] = None
+    procedureDate: str
+    procedureTime: str
+    procedureType: Optional[str] = None
+    procedureDescription: str
+    technique: Optional[str] = None
+    anesthesia: Optional[str] = None
+    patientStatus: Optional[str] = None
+    followUp: Optional[str] = None
+    medications: Optional[List[Medication]] = []
+
+# ------------------------- ENDPOINTS EXISTENTES -----------------------------
 
 @app.get("/patient/{patient_id}", response_model=dict)
 async def get_patient_by_id(patient_id: str):
@@ -88,6 +131,27 @@ async def register_clinical_procedure(request: Request):
         return {"_id": procedure_id}
     else:
         raise HTTPException(status_code=500, detail="Error al registrar procedimiento y medicamentos")
+
+# ------------------ NUEVOS ENDPOINTS PARA FORMULARIO HTML -------------------
+
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse("formulario.html", {"request": request})
+
+@app.post("/submit-form", response_model=dict)
+async def submit_form(data: MedicalForm):
+    try:
+        # Puedes enviar esto a `write_clinical_procedure` o alguna lógica extra
+        status, procedure_id = write_clinical_procedure(data.dict())
+        if status == "success":
+            return {"message": "Formulario recibido correctamente", "_id": procedure_id}
+        else:
+            raise HTTPException(status_code=500, detail="Error al guardar formulario")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
     import uvicorn
