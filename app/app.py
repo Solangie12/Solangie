@@ -14,6 +14,9 @@ from app.controlador.PatientCrud import (
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+@app.on_event("startup")
+async def startup_event():
+    print("🚀 ¡Aplicación FastAPI iniciada correctamente!")
 
 # ------------------------ CONFIGURACIÓN CORS Y STATIC -----------------------
 app.add_middleware(
