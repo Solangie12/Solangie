@@ -29,6 +29,13 @@ app.add_middleware(
 
 
 # ---------------------- MODELOS PARA FORMULARIO MÉDICO ----------------------
+
+class AppointmentModel(BaseModel):
+    patientName: str
+    appointmentDate: str
+    appointmentTime: str
+    reason: str
+
 class Medication(BaseModel):
     name: str
     dose: str
