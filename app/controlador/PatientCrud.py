@@ -125,8 +125,8 @@ def write_appointment(appointment_data: dict):
         }
 
         result = appointment_collection.insert_one(appointment_fhir)
-        return "success", str(result.inserted_id)
         print("✅ Resultado MongoDB:", result)
+        return "success", str(result.inserted_id)
 
 
     except Exception as e:
