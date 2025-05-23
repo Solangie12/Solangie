@@ -102,8 +102,31 @@ def GetAppointmentByIdentifier(appointmentSystem, appointmentValue):
 
 def write_appointment(appointment_data: dict):
     try:
-        result = appointment_collection.insert_one(appointment_data)
+        # Procesar datos básicos
+        patient_name = appointment_data.get("patientName", "Desconocido")
+        appointment_date = appointment_data.get("appointmentDate")
+        appointment_time = appointment_data.get("appointmentTime")
+        reason = appointment_data.get("reason", "")
+
+        # Construir estructura tipo FHIR
+        appointment_fhir = {
+            "resourceType": "Appointment",
+            "status": "booked",
+            "description": reason,
+            "start": f"{appointment_date}T{appointment_time}",
+            "participant": [
+                {
+                    "actor": {
+                        "display": patient_name
+                    },
+                    "status": "accepted"
+                }
+            ]
+        }
+
+        result = appointment_collection.insert_one(appointment_fhir)
         return "success", str(result.inserted_id)
+
     except Exception as e:
         print("Error in write_appointment:", e)
         return "error", None
