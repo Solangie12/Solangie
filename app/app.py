@@ -108,13 +108,11 @@ async def add_service_request(request: Request):
         raise HTTPException(status_code=500, detail=f"Error al registrar la solicitud: {status}")
 
 @app.post("/appointment", response_model=dict)
-async def add_appointment(request: Request):
-    appointment_data = await request.json()
+async def add_appointment(appointment: AppointmentModel):
+    appointment_data = appointment.dict()
+    print("📩 Datos recibidos:", appointment_data)
     status, appointment_id = write_appointment(appointment_data)
-    if status == "success":
-        return {"_id": appointment_id}
-    else:
-        raise HTTPException(status_code=500, detail="Error al registrar la cita")
+    return {"status": status, "appointment_id": appointment_id}
 
 @app.get("/appointment/{appointment_id}", response_model=dict)
 async def get_appointment(appointment_id: str):
